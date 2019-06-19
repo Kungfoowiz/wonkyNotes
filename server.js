@@ -30,9 +30,7 @@ app.use(express.static(__dirname + "/public"));
 
 app.get('/', (request, response) => {
   
-  var pass = request.query.pass;
-  
-  if(pass === process.env.pass)
+  if(canAccess(request))
   {
       response.sendFile(__dirname + "/views/index.html");
   }
@@ -43,26 +41,29 @@ app.get('/', (request, response) => {
   
 });
 
-app
-
 
 
 
 app.get('/notes', (request, response, next) => {
+  
+  if(canAccess(request))
+  {
 
-  firestore.collection("notes").orderBy("created").get()
-    .then(function (snapshot) {
-      var result = snapshot.docs.map(doc => { 
-        
-        var docResult = doc.data();
-        docResult.id = doc.id;
+    firestore.collection("notes").orderBy("created").get()
+      .then(function (snapshot) {
+        var result = snapshot.docs.map(doc => { 
 
-        return docResult;
-      });
+          var docResult = doc.data();
+          docResult.id = doc.id;
 
-      response.json(result);
-    })
-    .catch(next);
+          return docResult;
+        });
+
+        response.json(result);
+      })
+      .catch(next);
+    
+  }
 
 });
 
@@ -75,7 +76,19 @@ function isValidText(note) {
 }
 
 
-
+function canAccess(request)
+{
+  
+  var result = false;
+  
+  if(request.query.pass === process.env.pass)
+  {
+    result = true;
+  }
+  
+  return result;
+    
+}
 
 
 app.use(rateLimit({
@@ -89,28 +102,38 @@ app.use(rateLimit({
 
 app.post('/notes', (request, response, next) => {
   
-  if (isValidText(request.body)) {
+  if(canAccess(request))
+  {
+  
+    if (isValidText(request.body)) 
+    {
 
-    const note = {
-      text: filter.clean(request.body.text.toString().trim()),
-      created: new Date().toUTCString()
-    };
+      const note = {
+        text: filter.clean(request.body.text.toString().trim()),
+        created: new Date().toUTCString()
+      };
 
-    firestore.collection("notes").add(note)
-      .then(function (createdNote) {
-        console.log("Document written with ID: ", createdNote.id);
-        response.json(createdNote.id);
-      })
-      .catch(next);
+      firestore.collection("notes").add(note)
+        .then(function (createdNote) {
+          console.log("Document written with ID: ", createdNote.id);
+          response.json(createdNote.id);
+        })
+        .catch(next);
 
 
-  }
-  else {
-    response.status(422);
+    }
     
-    response.json({
-      message: 'Hey! Text is required! Text cannot be longer than 200 characters.'
-    });
+    else 
+    {
+      
+      response.status(422);
+
+      response.json({
+        message: 'Hey! Text is required! Text cannot be longer than 200 characters.'
+      });
+      
+    }
+    
   }
 
 });

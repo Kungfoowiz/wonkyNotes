@@ -40,6 +40,7 @@ listAllNotes();
 
 form.addEventListener('submit', (event) => {
   event.preventDefault();
+  
   const formData = new FormData(form);
   const text = formData.get('text');
 
@@ -52,7 +53,7 @@ form.addEventListener('submit', (event) => {
       text
     };
     
-    fetch(API_URL, {
+    fetch(getUrlWithPass(), {
       method: 'POST',
       body: JSON.stringify(note),
       headers: {
@@ -85,13 +86,18 @@ form.addEventListener('submit', (event) => {
   }
 });
 
-
+function getUrlWithPass(){
+  var params = (new URL(document.location)).searchParams;
+  var pass = params.get("pass");
+  
+  return API_URL + '?pass=' + pass;
+}
 
 function listAllNotes() {
   
   notesElement.innerHTML = '';
   
-  fetch(API_URL)
+  fetch(getUrlWithPass())
 
     .then(response => response.json())
     

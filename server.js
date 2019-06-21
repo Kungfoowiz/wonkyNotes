@@ -7,7 +7,8 @@ const rateLimit = require("express-rate-limit");
 
 const app = express();
 
-var config = {
+var config = 
+{
   apiKey: process.env.config_apiKey,
   authDomain: process.env.config_authDomain,
   databaseURL: process.env.config_databaseURL,
@@ -28,7 +29,8 @@ app.use(express.static(__dirname + "/public"));
 
 
 
-app.get('/', (request, response) => {
+app.get('/', (request, response) => 
+{
   
   if(canAccess(request))
   {
@@ -43,25 +45,26 @@ app.get('/', (request, response) => {
 
 
 
-
-app.get('/notes', (request, response, next) => {
+app.get('/notes', (request, response, next) => 
+{
   
   if(canAccess(request))
   {
 
-    firestore.collection("notes").orderBy("created").get()
-      .then(function (snapshot) {
-        var result = snapshot.docs.map(doc => { 
+    firestore.collection("notes").
+      orderBy("created", "asc").get().then(function (snapshot) 
+    {
+      var result = snapshot.docs.map(doc => { 
+        var docResult = doc.data();
+        
+        docResult.id = doc.id;
 
-          var docResult = doc.data();
-          docResult.id = doc.id;
+        return docResult;
+      });
 
-          return docResult;
-        });
-
-        response.json(result);
-      })
-      .catch(next);
+      response.json(result);
+    })
+    .catch(next);
     
   }
 
@@ -69,34 +72,10 @@ app.get('/notes', (request, response, next) => {
 
 
 
-
-
-function isValidText(note) {
+function isValidText(note) 
+{
   return note.text.length <= 200 && note.text.length > 0;
 }
-
-
-function canAccess(request)
-{
-  
-  var result = false;
-  
-  if(request.query.pass === process.env.pass)
-  {
-    result = true;
-  }
-  
-  return result;
-    
-}
-
-
-app.use(rateLimit({
-  windowMs: 10 * 1000, // 10 seconds
-  max: 100
-}));
-
-
 
 
 
@@ -110,7 +89,7 @@ app.post('/notes', (request, response, next) => {
 
       const note = {
         text: filter.clean(request.body.text.toString().trim()),
-        created: new Date().toUTCString()
+        created: new Date()
       };
 
       firestore.collection("notes").add(note)
@@ -139,6 +118,64 @@ app.post('/notes', (request, response, next) => {
 });
 
 
+  
+  app.delete('/notes/:id', (request, response, next) => {
+  
+  //if(canAccess(request))
+  //{
+  
+    // if (isValidText(request.body)) 
+    // {
+
+      //const noteId = filter.clean(request.params.id.toString().trim());
+    
+    firestore.collection("notes").doc('AvO77cDDf7V8Qxudqe9d').delete().then(function() {
+    console.log("Document successfully deleted!");
+      response.json('Doc deleted "AvO77cDDf7V8Qxudqe9d"');
+}).catch(function(error) {
+    console.error("Error removing document: ", error);
+});
+
+
+    // }
+    
+//     else 
+//     {
+      
+//       response.status(422);
+
+//       response.json({
+//         message: 'Hey! Text is required! Text cannot be longer than 200 characters.'
+//       });
+      
+//     }
+    
+  //}
+
+});
+
+
+
+function canAccess(request)
+{
+  
+  var result = false;
+  
+  if(request.query.pass === process.env.pass)
+  {
+    result = true;
+  }
+  
+  return result;
+    
+}
+
+
+
+app.use(rateLimit({
+  windowMs: 10 * 1000, // 10 seconds
+  max: 100
+}));
 
 
 
@@ -148,8 +185,6 @@ app.use((error, request, response, next) => {
     message: error.message
   });
 });
-
-
 
 
 

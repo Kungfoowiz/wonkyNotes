@@ -5,6 +5,14 @@
   box-sizing: border-box;
 }
 
+.right {
+  margin-right: 10px;
+}
+
+.hoverable:hover {
+  display: none;
+}
+
 body {
   font-family: "Benton Sans", "Helvetica Neue", helvetica, arial, sans-serif;
   margin: 2em;

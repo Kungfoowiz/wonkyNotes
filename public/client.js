@@ -112,15 +112,27 @@ function listAllNotes() {
 
           const text = document.createElement('div');
           text.textContent = note.text;
+          text.setAttribute('class', 'right');
 
           const created = document.createElement('small');
-          created.textContent = new Date(note.created).toString();
+          created.textContent = new Date(note.created.seconds * 1e3).toUTCString();
+          
+          const deleteButton = document.createElement('span');
+          deleteButton.onclick = function()
+          {
+            deleteNote('AvO77cDDf7V8Qxudqe9d');
+          }
+          deleteButton.setAttribute('class', 'hoverable fas fa-backspace');
           
           const line = document.createElement('hr');
 
           div.appendChild(text);
+          text.appendChild(deleteButton);
+          
           div.appendChild(created);
+          
           div.appendChild(line);
+          
 
           notesElement.appendChild(div);
         });
@@ -129,4 +141,38 @@ function listAllNotes() {
 
     });
 
+}
+
+
+function deleteNote(id)
+{
+
+   fetch(API_URL, {
+      method: 'DELETE',
+      body: JSON.stringify('AvO77cDDf7V8Qxudqe9d'),
+      headers: {
+        'content-type': 'application/json'
+      }
+    }).then(response => {      
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType.includes('json')) {
+          return response.json().then(error => Promise.reject(error.message));
+        } else {
+          return response.text().then(message => Promise.reject(message));
+        }
+      }
+    }).then(() => {
+      form.reset();
+      setTimeout(() => {
+        form.style.display = '';
+      }, 300);
+      listAllNotes();
+    }).catch(errorMessage => {
+      form.style.display = '';
+      errorElement.textContent = errorMessage;
+      errorElement.style.display = '';
+      loadingElement.style.display = 'none';
+    });
+  
 }
